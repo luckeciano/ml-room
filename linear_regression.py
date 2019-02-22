@@ -5,7 +5,6 @@ import numpy as np
 
 class LinearRegression(Predictor):
     def __init__(self):
-        super().__init__()
         self.weights = None
         self.bias = None
         self.batch_sampler = None
