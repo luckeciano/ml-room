@@ -5,6 +5,7 @@ from linear_regression import LinearRegression
 from logistic_regression import LogisticRegression
 from linear_regression_mle import LinearRegressionMLE
 from linear_regression_map import LinearRegressionMAP
+from bayesian_linear_regression import BayesianLinearRegression
 import numpy as np
 
 
@@ -14,7 +15,8 @@ def main():
     #test_linear_regression_mle_simple()
     #test_linear_regression_mle_poly()
     #test_linear_regression_map_simple()
-    test_linear_regression_map_mle_poly()
+    #test_linear_regression_map_mle_poly()
+    test_bayesian_linear_regression()
 
 def test_logistic_regression():
     data_ingestor = DataIngestor()
@@ -172,6 +174,35 @@ def test_linear_regression_map_mle_poly():
     plt.title('Polynomial Linear Regression (Degree 9) - MAP vs MLE')
     plt.show()
 
+def test_bayesian_linear_regression():
+    np.random.seed(5)
+    metrics_tracker = MetricsTracker()
+    n_samples = 20
+    initial_x = np.linspace(0, 2 * np.pi, n_samples).reshape(n_samples, 1)
+    degree_x = 10
+    noise = np.random.randn(initial_x.shape[0]).reshape(n_samples, 1)
+    x = initial_x
+
+    for i in range(2, degree_x + 1):
+        x = np.concatenate((x, pow(initial_x, i)), axis = 1)
+    
+    y = -4.0*np.sin(initial_x) + noise*0.5
+    y_noise_free = -4.0*np.sin(initial_x)
+    y = y.reshape((n_samples, 1))
+
+
+    print("Test Linear Regression Bayesian:  ")
+    bayesianLinearRegression = BayesianLinearRegression()
+    metrics_tracker.profile(bayesianLinearRegression.train, x, y, 0.5, 
+        np.ones(degree_x + 1).reshape((degree_x+1, 1)), np.eye(degree_x + 1))
+    test_y_linear_bayesian, mu, var = metrics_tracker.profile(bayesianLinearRegression.predict, x)
+
+    plt.plot(x[:, 0], mu)
+    plt.fill_between(x[:, 0], mu - 2*var, mu + 2*var, alpha = 0.4)
+    plt.scatter(x[:, 0], y)
+    plt.legend(loc='best')
+    plt.title('Bayesian Linear Regression (Degree 9)')
+    plt.show()
 
 
 main()
