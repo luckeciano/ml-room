@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from linear_regression import LinearRegression
 from logistic_regression import LogisticRegression
 from linear_regression_mle import LinearRegressionMLE
+from linear_regression_map import LinearRegressionMAP
 import numpy as np
 
 
@@ -11,7 +12,9 @@ def main():
     #test_linear_regression()
     #test_logistic_regression()
     #test_linear_regression_mle_simple()
-    test_linear_regression_mle_poly()
+    #test_linear_regression_mle_poly()
+    #test_linear_regression_map_simple()
+    test_linear_regression_map_mle_poly()
 
 def test_logistic_regression():
     data_ingestor = DataIngestor()
@@ -105,5 +108,70 @@ def test_linear_regression_mle_poly():
     plt.scatter(x[:, 0], y)
     plt.legend(loc='best')
     plt.show()
+
+
+def test_linear_regression_map_simple():
+    print("Test Linear Regression MAP:  ")
+    metrics_tracker = MetricsTracker()
+    n_samples = 200
+    x = np.linspace(0, 2 * np.pi, n_samples).reshape(n_samples, 1)
+    noise = np.random.randn(x.shape[0]).reshape(n_samples, 1)
+    y = -4*x + 7  + noise*2.0
+    y = y.reshape(n_samples, 1)
+
+    linearRegressionMAP = LinearRegressionMAP()
+    metrics_tracker.profile(linearRegressionMAP.train, x, y, 1.0)
+    test_y_linear = metrics_tracker.profile(linearRegressionMAP.predict, x)
+    metrics_tracker.mean_squared_error(test_y_linear, y)
+    err = metrics_tracker.mean_squared_error(test_y_linear, y)
+    print("Squared Mean Error: " + str(err))
+
+    plt.scatter(x, y)
+    plt.plot(x, test_y_linear)
+    plt.show()
+
+#MAP vs MLE: Check that MAP makes overfitting small
+def test_linear_regression_map_mle_poly():
+    np.random.seed(5)
+    metrics_tracker = MetricsTracker()
+    n_samples = 20
+    initial_x = np.linspace(0, 2 * np.pi, n_samples).reshape(n_samples, 1)
+    degree_x = 10
+    noise = np.random.randn(initial_x.shape[0]).reshape(n_samples, 1)
+    x = initial_x
+
+    for i in range(2, degree_x + 1):
+        x = np.concatenate((x, pow(initial_x, i)), axis = 1)
+    
+    y = -4.0*np.sin(initial_x) + noise*0.5
+    y_noise_free = -4.0*np.sin(initial_x)
+    y = y.reshape((n_samples, 1))
+
+
+    print("Test Linear Regression MLE:  ")
+    linearRegressionMLE = LinearRegressionMLE()
+    metrics_tracker.profile(linearRegressionMLE.train, x, y)
+    test_y_linear_mle = metrics_tracker.profile(linearRegressionMLE.predict, x)
+    err_mle = metrics_tracker.mean_squared_error(test_y_linear_mle, y)
+
+
+    print("Test Linear Regression MAP:  ")
+    linearRegressionMAP = LinearRegressionMAP()
+    metrics_tracker.profile(linearRegressionMAP.train, x, y, 0.08)
+    test_y_linear_map = metrics_tracker.profile(linearRegressionMAP.predict, x)
+    metrics_tracker.mean_squared_error(test_y_linear_map, y)
+    err_map = metrics_tracker.mean_squared_error(test_y_linear_map, y)
+
+
+    print("Squared Mean Error (MLE, MAP): " + str((err_mle, err_map)))
+    
+    plt.plot(x[:, 0], test_y_linear_map, label = 'MAP')
+    plt.plot(x[:, 0], test_y_linear_mle, label = 'MLE')
+    plt.scatter(x[:, 0], y)
+    plt.legend(loc='best')
+    plt.title('Polynomial Linear Regression (Degree 9) - MAP vs MLE')
+    plt.show()
+
+
 
 main()
