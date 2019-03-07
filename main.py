@@ -6,17 +6,20 @@ from logistic_regression import LogisticRegression
 from linear_regression_mle import LinearRegressionMLE
 from linear_regression_map import LinearRegressionMAP
 from bayesian_linear_regression import BayesianLinearRegression
+from PCA import PCA
 import numpy as np
 
 
 def main():
     #test_linear_regression()
-    #test_logistic_regression()
+    # test_logistic_regression()
+   #test_linear_regression()
     #test_linear_regression_mle_simple()
     #test_linear_regression_mle_poly()
     #test_linear_regression_map_simple()
     #test_linear_regression_map_mle_poly()
-    test_bayesian_linear_regression()
+    #test_bayesian_linear_regression()
+    test_pca()
 
 def test_logistic_regression():
     data_ingestor = DataIngestor()
@@ -204,5 +207,39 @@ def test_bayesian_linear_regression():
     plt.title('Bayesian Linear Regression (Degree 9)')
     plt.show()
 
+def test_pca():
+    data_ingestor = DataIngestor()
+    X, y, _, _ = data_ingestor.load_mnist()
+
+    X = X.T
+
+
+    pca = PCA()
+
+    dimensionality = [1, 10, 100, 500, 784]
+    element = [1, 2, 3, 4]
+    
+
+    fig, axes = plt.subplots(len(dimensionality), 1, sharey=True)
+    plt.gray()
+    for i, big_ax in enumerate(axes, start=0):
+        big_ax.set_title('PCs = ' + str(dimensionality[i]))
+        big_ax.tick_params(labelcolor=(1.,1.,1., 0.0), top='off', bottom='off', left='off', right='off')
+        big_ax._frameon = False
+        _, X_tilde = pca.compute_pca(X, dimensionality[i])
+        for j in range(len(element)):
+            ax = fig.add_subplot(len(dimensionality), len(element), i*len(element) + j + 1)
+            ax.imshow(X_tilde.T[element[j]].reshape([28,28]))
+            plt.axis('off')
+    
+    plt.show()
+
+    eigvals, _ = pca.compute_pca(X)
+
+    reconstruction_error = [np.sum(eigvals[i:]) for i in range(len(eigvals))]
+    plt.plot(range(len(reconstruction_error)), reconstruction_error)
+    plt.axhline(0, color='black')
+    plt.title('Average Construction Error')
+    plt.show()
 
 main()
