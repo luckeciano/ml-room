@@ -6,6 +6,7 @@ from logistic_regression import LogisticRegression
 from linear_regression_mle import LinearRegressionMLE
 from linear_regression_map import LinearRegressionMAP
 from bayesian_linear_regression import BayesianLinearRegression
+from EM_GMM import EM_GMM
 from PCA import PCA
 import numpy as np
 
@@ -19,7 +20,8 @@ def main():
     #test_linear_regression_map_simple()
     #test_linear_regression_map_mle_poly()
     #test_bayesian_linear_regression()
-    test_pca()
+    # test_pca()
+    test_gmm()
 
 def test_logistic_regression():
     data_ingestor = DataIngestor()
@@ -242,4 +244,29 @@ def test_pca():
     plt.title('Average Construction Error')
     plt.show()
 
+def test_gmm():
+    from scipy.stats import multivariate_normal
+
+
+    w = np.array([0.29, 0.28, 0.43])
+    x = np.linspace(-5, 7.5, 1000)
+
+    X = w.T.dot([multivariate_normal.pdf(x, -2.75, [0.06]), multivariate_normal.pdf(x, -0.50, [0.25]), multivariate_normal.pdf(x, 3.64, [1.63])])
+    
+    X = X.reshape((len(X), 1))
+
+    n_components = 3
+    
+    #Sampling dataset
+    dataset_choice = np.random.choice(n_components, 100, p = w)
+    gaussians = [multivariate_normal(-2.75, [0.06]), multivariate_normal(-0.50, [0.25]), multivariate_normal(3.64, [1.63])]
+    dataset = np.array([gaussians[i].rvs() for i in dataset_choice]).reshape((len(dataset_choice), 1))
+    
+    gmm = EM_GMM()
+    means, covariances, weights, _ = gmm.compute_EM(dataset, n_components)
+    Y = weights.T.dot([multivariate_normal.pdf(x, means[0], covariances[0]), multivariate_normal.pdf(x, means[1], covariances[1]), multivariate_normal.pdf(x, means[2], covariances[2])])
+    plt.plot(x, X)
+    plt.scatter(dataset, [0] * len(dataset))
+    plt.plot(x, Y)
+    plt.show()
 main()
